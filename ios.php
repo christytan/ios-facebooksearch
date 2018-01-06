@@ -6,7 +6,7 @@
 
 		$key = $_GET['key'];
 		$tab = $_GET['tab'];
-		$access_token = "EAABpj6aOxawBABppDv5Y9jSju2o8Sup9hgptAIISjtpuU6DJyWXN1YPbXRdNIH9MD43wjRZCtK2NeGuiKIwAvTmnsNfTEU2sXnWvGiZBMd0IOh67TiYSSlf9LD8R4maXq0y9wdsg8poCDEwlr35pZByO00NfYydkyoHmCUGzzH28Ra9dL4aRDcZCu0U0W7AZD";
+		$access_token = "https://graph.facebook.com/v2.8/search?q=usc&type=user&fields=id,name,picture.width(700).height(700)&limit=10&access_token=EAABpj6aOxawBAPaa8ylnynLlaNHQvMX7nnqOnGwIVmbI9xE920w0NU7nITJvdmoyhHlZCZC73uNLYnxfTW8MIhl5ZBuZAU3gH3ZB0sDrV7qeuZBcjKuW0vI74JRHCZAsq95vuZBu8XZAXCZBveWfEhwtDZCV64GULNNsttsw24JCZA1jFQZDZD";
 
 
 		if($tab != 'place') {
