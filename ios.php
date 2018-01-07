@@ -29,6 +29,7 @@
 	}
 
 	if(isset($_GET['id'])) {
+		$access_token = "EAABpj6aOxawBAPaa8ylnynLlaNHQvMX7nnqOnGwIVmbI9xE920w0NU7nITJvdmoyhHlZCZC73uNLYnxfTW8MIhl5ZBuZAU3gH3ZB0sDrV7qeuZBcjKuW0vI74JRHCZAsq95vuZBu8XZAXCZBveWfEhwtDZCV64GULNNsttsw24JCZA1jFQZDZD";
 		$ida = $_GET['id'];
 		$result = file_get_contents("https://graph.facebook.com/v2.8/$ida?fields=name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name,%20picture}},posts.limit(5){created_time,message}&access_token=$access_token");
 		echo $result;
