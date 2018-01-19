@@ -1,0 +1,220 @@
+//
+//  useralbumViewController.swift
+//  christyiosfirst
+//
+//  Created by chen tan on 4/17/17.
+//  Copyright © 2017 chen tan. All rights reserved.
+//
+
+import UIKit
+import Alamofire
+import SwiftyJSON
+import SwiftSpinner
+import EasyToast
+
+class useralbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
+    
+    @IBOutlet weak var useralbumoptionmenu: UIBarButtonItem!
+    @IBOutlet weak var useralbumtableview: UITableView!
+    var useralbumid = String()
+    var array = [AnyObject]()
+    var selectedIndexPath:NSIndexPath?
+
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+        
+        SwiftSpinner.show(duration: 3.0, title: "Loading data...")
+        
+        
+
+        // Do any additional setup after loading the view.
+        
+        //get data from ap tab controller
+        
+        let tab = self.tabBarController as! APUserViewController
+        useralbumid = tab.id
+        
+        
+        //call alamofire
+        let para: Parameters = [
+            "id":useralbumid
+        ]
+        //print("id in page album is:\(id)")
+        
+        Alamofire.request("http://35.226.10.223/ios.php", method: .get, parameters: para).validate().responseJSON { response in
+            
+            let result = response.result
+            if result.value != nil {
+                let dict = result.value as! Dictionary<String,AnyObject>
+                let innerDict = dict["albums"]?["data"]
+                if innerDict != nil {
+                    self.array = innerDict as! [AnyObject]
+                }
+                
+                self.useralbumtableview.reloadData()
+                
+            }
+            
+        }
+        
+        self.useralbumtableview.tableFooterView = UIView(frame: CGRect.zero)
+        
+        
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return array.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = self.useralbumtableview.dequeueReusableCell(withIdentifier: "useralbumcell", for: indexPath) as! UserAlbumTableViewCell
+        cell.useralbumname.text = array[indexPath.row]["name"] as! String
+        
+        //load image
+        
+        let pic = array[indexPath.row]["photos"] as? [String:Any]
+        
+        if pic != nil {
+            //count the album picture number
+            let arraypic = pic?["data"] as! [AnyObject]
+            
+            if let picpd = pic?["data"] as? [[String:Any]] {
+                var i = 0
+                let pidd = picpd[i]
+                let picURL = pidd["picture"] as! String
+                //print("firstpic:\(picURL)")
+                let url = URL(string: picURL)
+                DispatchQueue.global().async {
+                    let data = try? Data(contentsOf: url!)
+                    DispatchQueue.main.async {
+                        cell.useralbumpicone.image = UIImage(data: data!)
+                    }
+                }
+                
+                i += 1
+                
+                
+                if i+1 == arraypic.count {
+                    
+                    let pidtwo = picpd[1]
+                    let picURLtwo = pidtwo["picture"] as! String
+                    let urltwo = URL(string:picURLtwo)
+                    //print("firstpic:\(picURLtwo)")
+                    DispatchQueue.global().async {
+                        let datatwo = try? Data(contentsOf: urltwo!)
+                        DispatchQueue.main.async {
+                            cell.useralbumpictwo.image = UIImage(data:datatwo!)
+                        }
+                    }
+                }
+            }
+        }
+
+        
+        
+        
+        
+        return cell
+        
+    }
+    
+    
+    override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.isNavigationBarHidden = false
+    }
+    
+    
+    
+    
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        var numOfSections: Int = 0
+        if array.count>0 {
+            tableView.separatorStyle = .singleLine
+            numOfSections            = 1
+            tableView.backgroundView = nil
+        }
+        else {
+            let noDataLabel: UILabel     = UILabel(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
+            noDataLabel.text          = "No data found"
+            noDataLabel.textColor     = UIColor.black
+            noDataLabel.textAlignment = .center
+            tableView.backgroundView  = noDataLabel
+            tableView.separatorStyle  = .none
+        }
+        return numOfSections
+    }
+    
+    
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let previousIndexPath = selectedIndexPath
+        if indexPath as NSIndexPath == selectedIndexPath {
+            selectedIndexPath = nil
+        }
+        else {
+            selectedIndexPath = indexPath as NSIndexPath
+        }
+        var indexPaths : Array<NSIndexPath> = []
+        if let previous = previousIndexPath {
+            indexPaths += [previous]
+        }
+        if let current = selectedIndexPath {
+            indexPaths += [current]
+        }
+        if indexPaths.count > 0 {
+            tableView.reloadRows(at: indexPaths as [IndexPath], with: UITableViewRowAnimation.automatic)
+        }
+    }
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        (cell as! UserAlbumTableViewCell).watchFrameChanges()
+    }
+    func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        (cell as! UserAlbumTableViewCell).ignoreFrameChanges()
+    }
+    
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if indexPath as NSIndexPath == selectedIndexPath {
+            return UserAlbumTableViewCell.expandedHeight
+        }
+        else {
+            return UserAlbumTableViewCell.defaultHeight
+        }
+    }
+    
+    
+    //option menu
+    
+    
+    @IBAction func useroptionclick(_ sender: Any) {
+        let useralbumalert : UIAlertController = UIAlertController(title:"Menu", message: nil, preferredStyle: .actionSheet)
+        let useralbumfavorite = UIAlertAction(title: "Add to favorites", style:.default, handler: {action in self.favorite()})
+        let useralbumshare = UIAlertAction(title: "Add to favorites", style:.default, handler: {action in self.share()})
+        let useralbumcancel = UIAlertAction(title: "Cancel", style:.cancel, handler: nil)
+        useralbumalert.addAction(useralbumfavorite)
+        useralbumalert.addAction(useralbumshare)
+        useralbumalert.addAction(useralbumcancel)
+        self.present(useralbumalert, animated: true, completion: nil)
+        
+    }
+    func favorite() {
+        self.view.showToast("Added to favorites", position: .bottom, popTime: kToastNoPopTime, dismissOnTap: true)
+    }
+    func share() {
+        self.view.showToast("clicked share button!", position: .bottom, popTime: kToastNoPopTime, dismissOnTap: true)
+    }
+
+    
+    
+
+}
